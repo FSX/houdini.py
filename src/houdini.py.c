@@ -7,38 +7,39 @@
 #define HTML_ESCAPE(buf, str, len) houdini_escape_html0(buf, str, len, 0)
 #define HTML_ESCAPE_SECURE(buf, str, len) houdini_escape_html0(buf, str, len, 1)
 
-#define FUNC_SIG(name) static PyObject * name (PyObject *self, PyObject *args)
-#define FUNC_BODY(escape_function) \
-    PyObject *py_str;\
-    if (!PyArg_ParseTuple(args, "O", &py_str)) {\
-        return NULL;\
-    }\
-    if (!PyUnicode_Check(py_str)) {\
-        PyErr_SetString(PyExc_TypeError, "Argument must be a string.");\
-        return NULL;\
-    }\
-    gh_buf buf = GH_BUF_INIT;\
-    char *str = PyUnicode_AsUTF8(py_str);\
-    if ( escape_function (&buf, (const uint8_t *) str, strlen(str)))\
-    {\
-        Py_DECREF(py_str);\
-        py_str = Py_BuildValue("s#", buf.ptr, (int) buf.size);\
-        gh_buf_free(&buf);\
-    }\
-    return py_str;
+#define HOUDINI_FUNCTION(name, escape_function) \
+    static PyObject * name (PyObject *self, PyObject *args) {\
+        PyObject *py_str;\
+        if (!PyArg_ParseTuple(args, "O", &py_str)) {\
+            return NULL;\
+        }\
+        if (!PyUnicode_Check(py_str)) {\
+            PyErr_SetString(PyExc_TypeError, "Argument must be a string.");\
+            return NULL;\
+        }\
+        gh_buf buf = GH_BUF_INIT;\
+        char *str = PyUnicode_AsUTF8(py_str);\
+        if ( escape_function (&buf, (const uint8_t *) str, strlen(str)))\
+        {\
+            Py_DECREF(py_str);\
+            py_str = Py_BuildValue("s#", buf.ptr, (int) buf.size);\
+            gh_buf_free(&buf);\
+        }\
+        return py_str;\
+    }
 
 
-FUNC_SIG(py_escape_html)        { FUNC_BODY(HTML_ESCAPE);           }
-FUNC_SIG(py_escape_html_secure) { FUNC_BODY(HTML_ESCAPE_SECURE);    }
-FUNC_SIG(py_unescape_html)      { FUNC_BODY(houdini_unescape_html); }
-FUNC_SIG(py_escape_xml)         { FUNC_BODY(houdini_escape_xml);    }
-FUNC_SIG(py_escape_uri)         { FUNC_BODY(houdini_escape_uri);    }
-FUNC_SIG(py_escape_url)         { FUNC_BODY(houdini_escape_url);    }
-FUNC_SIG(py_escape_href)        { FUNC_BODY(houdini_escape_href);   }
-FUNC_SIG(py_unescape_uri)       { FUNC_BODY(houdini_unescape_uri);  }
-FUNC_SIG(py_unescape_url)       { FUNC_BODY(houdini_unescape_url);  }
-FUNC_SIG(py_escape_js)          { FUNC_BODY(houdini_escape_js);     }
-FUNC_SIG(py_unescape_js)        { FUNC_BODY(houdini_unescape_js);   }
+HOUDINI_FUNCTION(py_escape_html,        HTML_ESCAPE);
+HOUDINI_FUNCTION(py_escape_html_secure, HTML_ESCAPE_SECURE);
+HOUDINI_FUNCTION(py_unescape_html,      houdini_unescape_html);
+HOUDINI_FUNCTION(py_escape_xml,         houdini_escape_xml);
+HOUDINI_FUNCTION(py_escape_uri,         houdini_escape_uri);
+HOUDINI_FUNCTION(py_escape_url,         houdini_escape_url);
+HOUDINI_FUNCTION(py_escape_href,        houdini_escape_href);
+HOUDINI_FUNCTION(py_unescape_uri,       houdini_unescape_uri);
+HOUDINI_FUNCTION(py_unescape_url,       houdini_unescape_url);
+HOUDINI_FUNCTION(py_escape_js,          houdini_escape_js);
+HOUDINI_FUNCTION(py_unescape_js,        houdini_unescape_js);
 
 
 static PyMethodDef houdini_methods[] = {
