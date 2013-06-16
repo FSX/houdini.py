@@ -1,3 +1,0 @@
-[submodule "vendor/houdini"]
-	path = vendor/houdini
-	url = git://github.com/vmg/houdini.git

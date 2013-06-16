@@ -1,4 +1,3 @@
-import glob
 import shutil
 import os.path
 
@@ -29,21 +28,6 @@ class CleanCommand(BaseCommand):
                 shutil.rmtree(path)
 
 
-class VendorCommand(BaseCommand):
-    description = 'update Houdini files. Use `git submodule update` to the most recent files'
-    def run(self):
-        files = []
-        dest = os.path.join(dirname, 'src/houdini')
-
-        for path in ['vendor/houdini/*.h', 'vendor/houdini/*.c']:
-            files += glob.glob(os.path.join(dirname, path))
-
-        for path in files:
-            if os.path.exists(path):
-                print('copy %s -> %s' % (path, dest))
-                shutil.copy(path, dest)
-
-
 setup(
     name='houdini.py',
     version='0.1.1',
@@ -53,10 +37,7 @@ setup(
     url='http://python-houdini.61924.nl/',
     license='MIT',
     long_description=open(os.path.join(dirname, 'README.rst')).read(),
-    cmdclass={
-        'clean': CleanCommand,
-        'vendor': VendorCommand
-    },
+    cmdclass={'clean': CleanCommand},
     ext_modules=[Extension('houdini', [
         'src/houdini.py.c',
         'src/houdini/buffer.c',
