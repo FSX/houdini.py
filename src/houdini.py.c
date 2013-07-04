@@ -6,26 +6,25 @@
 
 #define HTML_ESCAPE(buf, str, len) houdini_escape_html0(buf, str, len, 0)
 #define HTML_ESCAPE_SECURE(buf, str, len) houdini_escape_html0(buf, str, len, 1)
-
 #define HOUDINI_FUNCTION(name, escape_function) \
     static PyObject * name (PyObject *self, PyObject *args) {\
-        PyObject *py_str;\
-        if (!PyArg_ParseTuple(args, "O", &py_str)) {\
+        PyObject *obj;\
+        if (!PyArg_ParseTuple(args, "O", &obj)) {\
             return NULL;\
         }\
-        if (!PyUnicode_Check(py_str)) {\
+        Py_INCREF(obj);\
+        if (!PyUnicode_Check(obj)) {\
             PyErr_SetString(PyExc_TypeError, "Argument must be a string.");\
             return NULL;\
         }\
         gh_buf buf = GH_BUF_INIT;\
-        char *str = PyUnicode_AsUTF8(py_str);\
-        if ( escape_function (&buf, (const uint8_t *) str, strlen(str)))\
-        {\
-            Py_DECREF(py_str);\
-            py_str = Py_BuildValue("s#", buf.ptr, (int) buf.size);\
+        char *cstr = PyUnicode_AsUTF8(obj);\
+        if ( escape_function (&buf, (const uint8_t *) cstr, strlen(cstr))) {\
+            Py_DECREF(obj);\
+            obj = PyUnicode_FromStringAndSize(buf.ptr, buf.size);\
             gh_buf_free(&buf);\
         }\
-        return py_str;\
+        return obj;\
     }
 
 
