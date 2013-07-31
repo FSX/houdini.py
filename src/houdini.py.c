@@ -6,6 +6,8 @@
 
 #define HTML_ESCAPE(buf, str, len) houdini_escape_html0(buf, str, len, 0)
 #define HTML_ESCAPE_SECURE(buf, str, len) houdini_escape_html0(buf, str, len, 1)
+
+#if PY_MAJOR_VERSION >= 3
 #define HOUDINI_FUNCTION(name, escape_function) \
     static PyObject * name (PyObject *self, PyObject *args) {\
         PyObject *obj;\
@@ -26,7 +28,28 @@
         }\
         return obj;\
     }
-
+#else
+#define HOUDINI_FUNCTION(name, escape_function) \
+    static PyObject * name (PyObject *self, PyObject *args) {\
+        PyObject *obj;\
+        if (!PyArg_ParseTuple(args, "O", &obj)) {\
+            return NULL;\
+        }\
+        Py_INCREF(obj);\
+        if (!PyString_Check(obj)) {\
+            PyErr_SetString(PyExc_TypeError, "Argument must be str type.");\
+            return NULL;\
+        }\
+        gh_buf buf = GH_BUF_INIT;\
+        char *cstr = PyString_AsString(obj);\
+        if ( escape_function (&buf, (const uint8_t *) cstr, strlen(cstr))) {\
+            Py_DECREF(obj);\
+            obj = PyString_FromStringAndSize(buf.ptr, buf.size);\
+            gh_buf_free(&buf);\
+        }\
+        return obj;\
+    }
+#endif
 
 HOUDINI_FUNCTION(py_escape_html,        HTML_ESCAPE);
 HOUDINI_FUNCTION(py_escape_html_secure, HTML_ESCAPE_SECURE);
