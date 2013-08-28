@@ -11,16 +11,19 @@
 #define HOUDINI_FUNCTION(name, escape_function) \
     static PyObject * name (PyObject *self, PyObject *args) {\
         PyObject *obj;\
+        PyObject *pstr;\
         if (!PyArg_ParseTuple(args, "O", &obj)) {\
             return NULL;\
         }\
         Py_INCREF(obj);\
-        if (!PyUnicode_Check(obj)) {\
-            PyErr_SetString(PyExc_TypeError, "Argument must be a string.");\
+        pstr = PyObject_Str(obj);\
+        if (pstr == NULL) {\
+            PyErr_SetString(PyExc_TypeError, "Argument must be str type.");\
             return NULL;\
         }\
         gh_buf buf = GH_BUF_INIT;\
-        char *cstr = PyUnicode_AsUTF8(obj);\
+        char *cstr = PyUnicode_AsUTF8(pstr);\
+        Py_DECREF(pstr);\
         if ( escape_function (&buf, (const uint8_t *) cstr, strlen(cstr))) {\
             Py_DECREF(obj);\
             obj = PyUnicode_FromStringAndSize(buf.ptr, buf.size);\
@@ -32,16 +35,19 @@
 #define HOUDINI_FUNCTION(name, escape_function) \
     static PyObject * name (PyObject *self, PyObject *args) {\
         PyObject *obj;\
+        PyObject *pstr;\
         if (!PyArg_ParseTuple(args, "O", &obj)) {\
             return NULL;\
         }\
         Py_INCREF(obj);\
-        if (!PyString_Check(obj)) {\
+        pstr = PyObject_Str(obj);\
+        if (pstr == NULL) {\
             PyErr_SetString(PyExc_TypeError, "Argument must be str type.");\
             return NULL;\
         }\
         gh_buf buf = GH_BUF_INIT;\
-        char *cstr = PyString_AsString(obj);\
+        char *cstr = PyString_AsString(pstr);\
+        Py_DECREF(pstr);\
         if ( escape_function (&buf, (const uint8_t *) cstr, strlen(cstr))) {\
             Py_DECREF(obj);\
             obj = PyString_FromStringAndSize(buf.ptr, buf.size);\
